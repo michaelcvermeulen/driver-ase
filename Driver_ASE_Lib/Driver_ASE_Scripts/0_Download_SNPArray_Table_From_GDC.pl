@@ -33,11 +33,13 @@ if ($help)
     $parsing->usage("0_table");
 }
 
-if (!defined $cancer_type || !defined $Exp_Strategy || !defined $array_type)
+if (!defined $cancer_type || !defined $array_type)
 {
-    print STDERR "Cancer type, array type and/or experimental strategy was not entered!\n";
+    print STDERR "Cancer type and/or array type  was not entered!\n";
     $parsing->usage("0_table");
 }
+
+$Exp_Strategy="Genotyping array" if defined $array_type;
 
 if ($Exp_Strategy eq "Genotyping array")
 {

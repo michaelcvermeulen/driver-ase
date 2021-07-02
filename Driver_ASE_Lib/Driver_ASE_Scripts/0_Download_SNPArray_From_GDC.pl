@@ -35,9 +35,9 @@ if ($help)
     $parsing->usage("0");
 }
 
-if (!defined $cancer_type || !defined $Exp_Strategy || !defined $array_type)
+if (!defined $cancer_type || !defined $array_type)
 {
-    print STDERR "Cancer type, experimental strategy and/or array type was not entered!\n";
+    print STDERR "Cancer type and/or array type was not entered!\n";
     $parsing->usage("0");
 }
 
@@ -59,6 +59,8 @@ $parsing->check_directory_existence("$database_path","$key"); #check if director
 $parsing->check_cancer_type($database_path,$cancer_type);
 
 mkdir "$Driver_ASE_Dir/Analysis" unless(-d "$Driver_ASE_Dir/Analysis");
+
+$Exp_Strategy="Genotyping array" if defined $array_type;
 
 if ("$Exp_Strategy" eq "Genotyping array")
 {
