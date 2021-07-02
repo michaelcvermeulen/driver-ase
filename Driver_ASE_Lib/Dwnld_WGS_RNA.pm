@@ -141,24 +141,33 @@ sub parse_patient_id
     chomp(my @data = <$in>);
     close ($in);
     open (PID,">$datatable_file");
-    shift @data;  #remove headers
+    my $header=shift @data;  #remove headers
+    my @hh=split("\t",$header);
+    #try to get column index for field id and platform;
+    my $platform_idx;my $field_id_idx;
+    for(my $ii=0;$ii<@hh;$ii++){
+		$field_id_idx=$ii if $hh[$ii]=~/file_id/i;
+		$platform_idx=$ii if $hh[$ii]=~/platform/i;
+	}
     
     foreach my $lines (@data)
-    {
+    {   #Note: the order of columns are NOT fixed, so it is not reliable to use index to rextract elements;
         my @split_line = split("\t",$lines);
-        my $Patient_ID_column = $split_line[1];
-        $Patient_ID_column = substr $Patient_ID_column, -3, 2;
+        #my $Patient_ID_column = $split_line[1];
+        my ($Patient_ID)=$lines=~/(TCGA-[^-]+-[^-]+-[^-\t]+)/;
+        my $sample_type = substr $Patient_ID, -3, 2;
+           $Patient_ID=~s/-[^-]+$//;#remove sample type;
 
-       if ($Patient_ID_column == 01)
+       if ($sample_type == 01)
         {
-            $Patient_ID_column = 1;
+            $sample_type = 1;
         }
-       if ($Patient_ID_column == 02)
+       if ($sample_type == 02)
         {
-            $Patient_ID_column = 2;
+            $sample_type = 2;
         }
         #.dtable(file.id | Patient ID | Sample Type | Tumour/Normal(num) | Platform)
-        print PID $split_line[4], "\t", $split_line[5], "\t", $Patient_ID_column, "\t", $split_line[0], "\t", $split_line[3], "\n";
+        print PID $split_line[$field_id_idx], "\t", $Patient_ID, "\t", $sample_type, "\t", $sample_type, "\t", $split_line[$platform_idx], "\n";
     }
     close (PID);
 }
@@ -200,7 +209,7 @@ sub parse_meta_id
     my ($UUID_list,$meta_ids) = @_; #file with UUIDs and file with meta IDs
 
     my @ID_column;
-    
+    #get file_id, which is the alias of uuid;
     open (UUIDS, "$UUID_list");
     chomp(my @all_bam_uuids = <UUIDS>);
     close (UUIDS);
