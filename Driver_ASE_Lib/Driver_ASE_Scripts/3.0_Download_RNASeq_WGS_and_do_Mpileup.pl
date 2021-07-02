@@ -266,8 +266,20 @@ if (($Exp_Strategy eq "RNA-Seq" and !(-f "$Analysispath/$cancer_type/$tables/$RN
     
     #pulls the UUIDs from the edit metadata file
     #pull_column(.edit.metadata.txt file,column(s) to pull,output file)
-    $parsing->pull_column("$cancer_type.edit.metadata.txt","8","temp.UUID");
+    #$parsing->pull_column("$cancer_type.edit.metadata.txt",1,"temp.UUID");
+    #Note: here the file_id column index will change sometimes;
+    #use perl regexpression to get column index for the file_id, which is uuid;
+    chomp(my $th=`head $cancer_type.edit.metadata.txt -n 1`);
+    my @ths=split("\t",$th);
+    my $file_id_idx;
+    for(my $tti=0;$tti<@ths;$tti++){
+           $file_id_idx=$tti+1 if $ths[$tti]=~/^file_id$/;
+    }
+
+    $parsing->pull_column("$cancer_type.edit.metadata.txt",$file_id_idx,"temp.UUID");
     
+
+
     #Strips the headers in the file.
     #strip_head(file to strip headers,output file)
     $parsing->strip_head("temp.UUID","$cancer_type.UUID.txt");
