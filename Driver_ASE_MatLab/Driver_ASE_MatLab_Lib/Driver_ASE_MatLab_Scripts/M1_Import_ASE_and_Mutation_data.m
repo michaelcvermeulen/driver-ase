@@ -21,6 +21,11 @@ scriptdir = pwd;
 disp('Current matlab script directory of M1_Import_ASE_and_Mutation_data is')
 disp(scriptdir)
 
+%make output directory
+mkdir(cancer_type)
+outputdir=strcat(scriptdir,'/',cancer_type);
+fprintf('Output dir will be:\n%s',outputdir)
+
 cd ../MatLab_Variables;
 disp('Go into matlab variable dir to load variables!')
 disp(pwd)
@@ -116,7 +121,7 @@ ylabel('Num of Genes with ASE can be measured in tumors');
 
 disp('Going to save figure Gene_level_ASE_QC_plot.pdf into the dir:')
 disp(cwd)
-print('../Gene_level_ASE_QC_plot.pdf','-dpdf')
+print(strcat(outputdir,'/Gene_level_ASE_QC_plot.pdf'),'-dpdf')
 close all;
 
 T.lr = log2(T.a./T.b);
@@ -144,7 +149,7 @@ v2g=rmfield(v2g,{'rowlabels' 'collabels'});
 disp('Ran var2gene_matrix and assigned results to variable v2g');
 
 %Go to the output directory
-cd ..
+cd(outputdir)
 disp('Changed to directory: ')
 disp(pwd)
 
@@ -240,9 +245,8 @@ OutPutDriverParametersIntoTxt(top,outfile);
 % disp(strcat({'Saved mut_ase_look as mut_ase_look_'},cancer_type,{' in directory '},pwd));
 % save(strcat('Mut_o_',cancer_type), 'All_Assoc','top_mut_dsd');
 % disp(strcat({'Saved All_Assoc and top_mut_dsd as Mut_o_'},cancer_type,{' in directory '},pwd));
-cd ..;
 disp('Your ASE-Mut association results are saved in: ');
-disp(pwd);
+disp(outputdir);
 disp('Changed to directory containing original matlab script: ')
 disp(scriptdir)
 cd(scriptdir);
