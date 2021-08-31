@@ -1,3 +1,7 @@
+#!/usr/bin/env perl
+
+#####!/usr/bin/perl -w
+
 package Driver_ASE_Lib::WGS_Analysis;
 
 use strict;

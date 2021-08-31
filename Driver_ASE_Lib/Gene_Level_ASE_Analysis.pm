@@ -1,4 +1,6 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
+
+#######!/usr/bin/perl -w
 
 package Driver_ASE_Lib::Gene_Level_ASE_Analysis;
 

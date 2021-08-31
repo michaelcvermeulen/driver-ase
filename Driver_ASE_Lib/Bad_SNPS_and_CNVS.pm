@@ -1,4 +1,7 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
+
+
+#######!/usr/bin/perl
 package Driver_ASE_Lib::Bad_SNPS_and_CNVS;
 
 use FindBin qw($Bin);

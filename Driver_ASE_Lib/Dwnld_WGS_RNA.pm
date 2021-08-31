@@ -1,4 +1,6 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
+
+#######!/usr/bin/perl -w
 package Driver_ASE_Lib::Dwnld_WGS_RNA;
 
 use strict;
@@ -980,17 +982,22 @@ sub download_files_from_gdc
                 $cmd = "$dwld_cmd -s 16 -x 16 --dir \'$geno_cnv_dir\' -o $a[0].$a[1] --header \'X-Auth-Token: $token\' https://api.gdc.cancer.gov/v0/legacy/data/$a[0]";
             }
         }
-        
+        next if $a[1] eq "NaN";
         print "The following code is submitted: \n$cmd\n\n";
-        push @cmds,$cmd;
+        `$cmd`;
+        my $tag=`cat $geno_cnv_dir/$a[0].$a[1]|grep "400 Bad Request"`;
+        print STDERR "400 Bad Request with the command:\n$cmd\n" and exit if $tag=~/400 Bad Request/;
+        #push @cmds,$cmd;
     }
     close (DW);
-    
-    mce_map
-    {
-        `$_`;
-        print "$_ is done.\n";
-    }@cmds;
+
+# Not use MCE for downloading multiple files at the same time;    
+#    mce_map
+#    {
+#        `$_`;
+#        print "$_ is done.\n";
+#    }@cmds;
+
 }
 
 sub Delete_Files_Recursively

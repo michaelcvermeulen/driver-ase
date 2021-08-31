@@ -1,4 +1,6 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env -w
+
+######!/usr/bin/perl -w
 
 package Driver_ASE_Lib::Imputation_Plink;
 
@@ -243,7 +245,9 @@ sub Prepare_Genos
     my $Genotype_birdseed_file = shift; # Genotype birdseed files from the directory that they were downloaded to
     my $self = $Genotype_birdseed_file and $Genotype_birdseed_file = shift if ref $Genotype_birdseed_file;
     my ($BirdseedPath,$snp6_cd_file,$bases,$type) = @_; #Path to birdseed files, snp6.cd.txt, processing directory, normal|tumor|normal/tumor (0|1|2)
-    
+
+    print STDERR "No file of $BirdseedPath/$Genotype_birdseed_file" and exit unless (-f "$BirdseedPath/$Genotype_birdseed_file");    
+
     my @a = split("\\.",$Genotype_birdseed_file);
     
     unless (defined($type))
@@ -469,11 +473,11 @@ sub submit_shapeit
     
     for (my $i = 1;$i < 23;$i++)
     {
-        print "Running shapeit for $i.\n";
+        #print "Running shapeit for $i.\n";
         push @cmds,"$shapeit --input-ped $rna_path/$ped_dir/$i.ped $rna_path/$map_dir/$i.map --input-map $Ref_Hap_Path/genetic_map_chr$i\_combined_b37.txt --output-max $phased/$i.phased.haps $phased/$i.phased.sample --output-log $rna_path/$logs/$i.shapeit_log";
     }
     my $i = 'X';
-    print "Running shapeit for $i.\n";
+    #print "Running shapeit for $i.\n";
     push @cmds,"$shapeit --input-ped $rna_path/$ped_dir/23.ped $rna_path/$map_dir/23.map --input-map $Ref_Hap_Path/genetic_map_chr$i\_nonPAR_combined_b37.txt --output-max $phased/$i.phased.haps $phased/$i.phased.sample --chrX --output-log $rna_path/$logs/$i.shapeit_log";
     
     return @cmds;
@@ -597,11 +601,14 @@ sub Extract_Ind_Het_Genos
 {
     my $chr = shift;#should be "chr\d+";
     my $self = $chr and $chr = shift if ref $chr;
-    my ($BED,$phased_sample_info,$cds_plink_dir,$plink) = @_; #path to plink bed files, path to sample file, path to directory where plink beds were made, plink command
-    
+    my ($BED,$phased_sample_info,$cds_plink_dir,$plink) = @_; 
+    #path to plink bed files, path to sample file, path to directory where plink beds were made, plink command
+    print STDERR "Going to extract het snps for the sample: $BED.fam\n";
     my $fam_fh=FileHandle->new("$BED.fam");
     chomp(my @ids=<$fam_fh>);
     $fam_fh->close;
+    print STDERR "No sample ids in the file $BED.fam\n" and exit if @ids<1;
+    
     my @TCGAs;
     my @cmds = map
     {

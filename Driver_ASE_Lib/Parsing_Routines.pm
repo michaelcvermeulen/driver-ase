@@ -1,10 +1,16 @@
+#!/usr/bin/env perl
+
+
+############!/usr/bin/perl -w
+
 package Driver_ASE_Lib::Parsing_Routines;
 
 use strict;
 use warnings;
 use File::Find;
 use File::Copy;
-use File::Which;
+#written a which sub to replace it;
+#use File::Which;
 use Archive::Tar;
 use autodie;
 no warnings 'once';
@@ -53,7 +59,7 @@ sub usage
     {
         $script = "";
     }
-    
+    print "#" x 100,"\n";
     if ($script eq "0")
     {
         print "usage: program [--cancer|-c cancer_type (e.g. PRAD)] [--Expstrategy|-E Experimental strategy (Genotyping array)] [--arraytype|-a array data type (e.g. Genotypes or “Copy number estimate”)] [--download|-d curl or aria2c] [--key|-k path to gdc key] [--help|-h]\n";
@@ -77,6 +83,10 @@ sub usage
     elsif ($script eq "1.1")
     {
 	print "usage: script [--cancer|-c cancer_type (e.g. PRAD)] [--plink|-p path to plink] [--sampletype|-s 0(normal)|1(tumor)|2(normal/tumor)] [--help|-h]\n";
+    }
+     elsif ($script eq "1.1.1")
+    {
+	print "usage: script [--cancer|-c cancer_type (e.g. PRAD)] [--plink|-p path to plink] [--PlinkBinaryBed|-b path to binary plink bed with appendix .bed ] [--help|-h]\n";
     }
     elsif ($script eq "1.2")
     {
@@ -115,42 +125,27 @@ sub usage
         print "usage: script [--cancer|-c cancer_type (e.g. PRAD)] [--help|-h]\n";
     }
     
-    print '
-        All available TCGA cancer types:
-	
-	Breast invasive carcinoma [BRCA]
-        Glioblastoma multiforme [GBM]
-        Ovarian serous cystadenocarcinoma [OV]
-        Lung adenocarcinoma [LUAD]
-        Uterine Corpus Endometrial Carcinoma [UCEC]
-        Kidney renal clear cell carcinoma [KIRC]
-        Head and Neck squamous cell carcinoma [HNSC]
-        Brain Lower Grade Glioma [LGG]
-        Thyroid carcinoma [THCA]
-        Lung squamous cell carcinoma [LUSC]
-        Prostate adenocarcinoma [PRAD]
-        Stomach adenocarcinoma [STAD]
-        Skin Cutaneous Melanoma [SKCM]
-        Colon adenocarcinoma [COAD]
-        Bladder Urothelial Carcinoma [BLCA]
-        Liver hepatocellular carcinoma [LIHC]
-        Cervical squamous cell carcinoma and endocervical adenocarcinoma [CESC]
-        Kidney renal papillary cell carcinoma [KIRP]
-        Sarcoma [SARC]
-        Esophageal Carcinoma [ESCA]
-        Pancreatic Adenocarcinoma [PAAD]
-        Pheochromocytoma and Paraganglioma [PCPG]
-        Rectum Adenocarcinoma [READ]
-        Testicular Germ Cell Tumors [TGCT]
-        Acute Myeloid Leukemia [LAML]
-        Thymoma [THYM]
-        Kidney Chromophobe [KICH]
-        Adernocortical Carcinoma [ACC]
-        Mesothelioma [MESC]
-        Uveal Melanoma [UVM]
-        Lymphoid Neoplasm Diffuse Large B-cell Lymphoma [DLBC]
-        Uterine Carcinosarcoma [UCS]
-        Cholangiocarcinoma [CHOL]',"\n";
+    print 'All available TCGA cancer types:	
+Breast invasive carcinoma [BRCA]               Glioblastoma multiforme [GBM]
+Ovarian serous cystadenocarcinoma [OV]         Lung adenocarcinoma [LUAD]
+Uterine Corpus Endometrial Carcinoma [UCEC]    Kidney renal clear cell carcinoma [KIRC]
+Head and Neck squamous cell carcinoma [HNSC]   Brain Lower Grade Glioma [LGG]
+Thyroid carcinoma [THCA]                       Lung squamous cell carcinoma [LUSC]
+Prostate adenocarcinoma [PRAD]                 Stomach adenocarcinoma [STAD]
+Skin Cutaneous Melanoma [SKCM]                 Colon adenocarcinoma [COAD]
+Bladder Urothelial Carcinoma [BLCA]            Liver hepatocellular carcinoma [LIHC]
+Kidney renal papillary cell carcinoma [KIRP]   Sarcoma [SARC]
+Esophageal Carcinoma [ESCA]                    Pancreatic Adenocarcinoma [PAAD]
+Pheochromocytoma and Paraganglioma [PCPG]      Rectum Adenocarcinoma [READ]
+Testicular Germ Cell Tumors [TGCT]             Acute Myeloid Leukemia [LAML]
+Thymoma [THYM]                                 Kidney Chromophobe [KICH]
+Adernocortical Carcinoma [ACC]                 Mesothelioma [MESC]
+Uterine Carcinosarcoma [UCS]                   Cholangiocarcinoma [CHOL]
+Cervical squamous cell carcinoma and           Lymphoid Neoplasm Diffuse 
+endocervical adenocarcinoma [CESC]             Large B-cell Lymphoma [DLBC]
+Uveal Melanoma [UVM]                           
+';
+    print "#" x 100,"\n";
     exit;
 }
 
@@ -261,7 +256,7 @@ sub CheckSoftware
 	#check if only the name of the software was entered
 	if ($soft =~ /^[a-zA-Z|0-9]+$/)
 	{
-	    my $which = which $soft;
+	    my $which = which($soft);
 	    if (!defined $which)
 	    {
 		print STDERR "$soft does not exist or is not in the global path!\n";
@@ -311,8 +306,11 @@ sub get_only_files_in_dir
     closedir ($dir);    
 
     @get_files = grep{-f "$path/$_"}@get_files; 
-    
-    return @get_files;
+    if (@get_files>0){
+      return @get_files;
+   }else{
+      print STDERR "No files in the dir:\n$path\nThe program stopped!\n" and exit;
+   }
 }
 
 sub QueryBase
@@ -978,5 +976,20 @@ sub archive_files
     }
     $tar->write("$compress_archive");
 }
+
+#replace the which subrountine from File::Which;
+sub which {
+   my $input=shift;
+   my $self=$input and $input=shift if ref $input;
+   my $cmd="";
+   chomp($cmd=`which $input`);
+   if (length($cmd)==0 and $cmd !~/\//){#for software can not be found;
+      return 0;
+      }else{#matched software should have at least one /;
+      return $cmd;
+      }
+}
+
+
 
 1;
