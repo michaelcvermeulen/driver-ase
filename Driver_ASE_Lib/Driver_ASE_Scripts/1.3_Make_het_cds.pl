@@ -1,5 +1,7 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 
+#####!/usr/bin/perl -w
+use MCE max_workers => 1;
 use MCE::Map;
 use FindBin qw($Bin);
 use lib "$Bin/..";
@@ -13,7 +15,7 @@ use autodie;
 no warnings 'once';
 
 my $time = localtime;
-print "Script started: $time.\n";
+print "\nScript started: $time.\n\n";
 
 #Changes to the directory of the script executing;
 chdir $Bin;
@@ -58,8 +60,10 @@ my $cds_tmp = "cds_sorted_tmp";
 my $finished_RNA = "$cancer_type\_finished_analysis_RNA";
 my $phased_sample = "21.phased.sample";
 
-$parsing->check_directory_existence("$database_path","$Analysispath","$Analysispath/$cancer_type","$Impute2out","$RNA_Path","$phased"); #check if directories or files exist
-$parsing->check_cancer_type($database_path,$cancer_type); #checks if the cancer type entered is valid
+$parsing->check_directory_existence("$database_path","$Analysispath","$Analysispath/$cancer_type","$Impute2out","$RNA_Path","$phased"); 
+#check if directories or files exist
+$parsing->check_cancer_type($database_path,$cancer_type); 
+#checks if the cancer type entered is valid
 
 chdir "$RNA_Path";
 
@@ -69,18 +73,21 @@ chdir "$RNA_Path";
 
 my @imputeout = $parsing->get_only_files_in_dir("$Impute2out");
 @imputeout = grep {/haps/}@imputeout;
-open (I2O,">$RNA_Path/imputed_haps");
+open (I2O,">$RNA_Path/imputed_haps") or die;
 for (my $i = 0;$i < scalar(@imputeout);$i++)
 {
     print I2O "$imputeout[$i]\n";
 }
 close (I2O);
+
 #impute_2_out($Impute2out (path to directory where raw imputed data was stored in script 1.2),$RNA_Path (path to directory where RNA-Seq Analysis is stored),$RNA_Path/imputed_haps (file that contains a list of haps files from directory where raw imputed is stored),$phased (path to directory with default name phased),$imputation (path to directory where impluted plink data will be stored),$plink (path/command for plink),$phased_sample (phased sample file))
 my @impute_out_cmds = $impute_plink->impute_2_out("$Impute2out","$RNA_Path","$RNA_Path/imputed_haps","$phased","$imputation","$plink","$phased_sample");
 
-mce_map
-{
-    system("$impute_out_cmds[$_]");
+#mce_map
+#just use map
+map
+{  print STDERR "running cds extraction for:\n$impute_out_cmds[$_]\n";
+   system("$impute_out_cmds[$_]");
 }0..$#impute_out_cmds;
 
 `rm $imputation/*.sample`;
@@ -95,16 +102,29 @@ for (my $i=0;$i<scalar(@merge_list);$i++)
 }
 close (ML);
 
-mce_map_f
+#mce_map_f
+#{
+    #chomp($_);
+    #print STDERR "Assigning chrpos to snps with missing ids for $imputation/$_.bim\n";
+    ##Assign_ChrPos_MissingId_SNPs($imputation/$_.bim (path to bim files created in impute_2_out))
+    #$impute_plink->Assign_ChrPos_MissingId_SNPs("$imputation/$_.bim");
+#}"$imputation/Merged_list.txt";
+
+open Mf,"$imputation/Merged_list.txt" or die;
+my @M1=<Mf>;
+map
 {
     chomp($_);
+    print STDERR "Assigning chrpos to snps with missing ids for $imputation/$_.bim\n";
     #Assign_ChrPos_MissingId_SNPs($imputation/$_.bim (path to bim files created in impute_2_out))
     $impute_plink->Assign_ChrPos_MissingId_SNPs("$imputation/$_.bim");
-}"$imputation/Merged_list.txt";
+}@M1;
+close Mf;
 
 chdir "$imputation";
 print "Now doing plink on Merged_list.txt.\n";
-`$plink --threads 3 --merge-list Merged_list.txt --out $cancer_type\_TN_TCGA_Imputation`;
+#Note: if snps have the same postions, the mergering process will fail if using threads >1;
+`$plink --threads 1 --merge-list Merged_list.txt --out $cancer_type\_TN_TCGA_Imputation`;
 
 chdir "$RNA_Path";
 `mv $imputation/$cancer_type\_TN_TCGA_Imputation.* $RNA_Path`;
@@ -118,18 +138,39 @@ print "Now running Extract_Ind_Het_Genos.\n";
 my @chrs = (1..23);
 my @Het_cmds;
 while (my $chr=<@chrs>)
-{
-    `$plink --bfile $RNA_Path/$cancer_type\_TN_TCGA_Imputation --chr $chr --make-bed --out $chr`;
+{   #Note: if there is not snps extracted for a specific chr, the plink command will fail and the whole process will be broken!
+	my $split_cmd="$plink --bfile $RNA_Path/$cancer_type\_TN_TCGA_Imputation --chr $chr --make-bed --out $chr";
+	print STDERR "Now split merged plink binary bed by chr:\n$split_cmd\n";
+    `$split_cmd`;
     #Extract_Ind_Het_Genos(chr$chr (chr#),$RNA_Path/$cds_plink/$chr (chr file made in the directory with default name cds_plink),$phased/$phased_sample (path to phased sample file),$RNA_Path/$cds_plink (path to directory with default name cds_plink),$plink (path/command for plink))
     push @Het_cmds, $impute_plink->Extract_Ind_Het_Genos("chr$chr","$RNA_Path/$cds_plink/$chr","$phased/$phased_sample","$RNA_Path/$cds_plink","$plink");
 };
-mce_map
-{
+#mce_map
+#just use map
+map
+{   print STDERR "Extracting het snps for $Het_cmds[$_]\n";
     system("$Het_cmds[$_]");
 }0..$#Het_cmds;
 
 print "Now running Append_snplist_chrs.\n";
-mce_map_f
+#mce_map_f
+#{
+    #chomp($_);
+    #if ($_=~/TCGA/)
+    #{
+        ##Get rid of the first two lines;
+        #my @as=split("\t| ",$_);
+        #my $ID=$as[1];
+        ##Append_snplist_chrs parameters: $ID $snplist_dir and $outdir;
+        ##Output file name will be $ID.snplist;
+        ##Append_snplist_chrs($ID (TCGA ID),$RNA_Path/$cds_plink (path to directory with default name cds_plink))
+        #$impute_plink->Append_snplist_chrs("$ID","$RNA_Path/$cds_plink");
+    #}
+#}"$phased/$phased_sample";
+
+open MF,"$phased/$phased_sample" or die;
+my @M2=<MF>;
+map
 {
     chomp($_);
     if ($_=~/TCGA/)
@@ -142,7 +183,8 @@ mce_map_f
         #Append_snplist_chrs($ID (TCGA ID),$RNA_Path/$cds_plink (path to directory with default name cds_plink))
         $impute_plink->Append_snplist_chrs("$ID","$RNA_Path/$cds_plink");
     }
-}"$phased/$phased_sample";
+}  @M2;
+close MF;
 
 print "Now running merge_tcga_snplist.\n";
 #merge_tcga_snplist($RNA_Path/$cds_plink (path to directory with default name cds_plink))
@@ -158,7 +200,8 @@ print "Now putting all snp lists into file all_chrs_snplist.txt.\n";
 $parsing->vlookup("$RNA_Path/$cds_plink/all_snplist.txt",1,"$RNA_Path/$cancer_type\_TN_TCGA_Imputation.bim",2,1,"y","$RNA_Path/all_chrs_snplist.txt");
 
 print "Now running Snplist_Query_Haps_for_Beds.\n";
-mce_map
+#mce_map
+map
 {
     my $chr=$_;
     #Snplist_Query_Haps_for_Beds(file that conains all the chr snplists,$phased/$phased_sample (path to phased sample file),$Impute2out (path to directory where raw imputed data was stored in script 1.2),output bed tag,chr#)
@@ -169,8 +212,9 @@ print "Now running Split_Bed_Haps_for_individuals.\n";
 #Split_Bed_Haps_for_individuals($RNA_Path/$cds_plink (path to directory with default name cds_plink))
 my @split_bed_haps_cmds = $impute_plink->Split_Bed_Haps_for_individuals("$RNA_Path/$cds_plink");
 
-mce_map
-{
+#mce_map
+map
+{   print STDERR "Running $split_bed_haps_cmds[$_]\n";
     `$split_bed_haps_cmds[$_]`;
 }0..$#split_bed_haps_cmds;
 
@@ -192,7 +236,8 @@ mkdir "$RNA_Path/$cds_sorted" unless(-d "$RNA_Path/$cds_sorted");
 #`rm -f $RNA_Path/$cds_sorted/*`;
 
 print "Now running Split_BedHaps.\n";
-mce_map
+#mce_map
+map
 {
     my $chr = $_;
     #Split_BedHaps will only keep Het SNPs;
@@ -223,7 +268,8 @@ mkdir "$cds_tmp" unless(-d "$RNA_Path/$cds_tmp");
 my @cds_sort_files = `ls $cds_sorted`;
 
 print "Now running Change_CD_ChrInfo_4_Mpileup.\n";
-mce_map
+#mce_map
+map
 {
     chomp(my $TCGA=$_);
     my $rd=rand();

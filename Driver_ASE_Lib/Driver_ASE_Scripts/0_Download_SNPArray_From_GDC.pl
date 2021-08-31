@@ -1,4 +1,6 @@
-#!/usr/bin/perl -w
+#!//usr/bin/env perl
+
+#####!/usr/bin/perl -w
 
 use strict;
 use FindBin qw($Bin);
@@ -9,11 +11,12 @@ use File::Copy;
 use Getopt::Long;
 use autodie;
 use Cwd 'realpath';
+use Cwd 'abs_path';
 use File::Basename;
 no warnings 'once';
 
 my $time = localtime;
-print "Script started: $time.\n";
+print "\nScript started: $time.\n\n";
 
 #Changes to the directory of the script executing;
 chdir $Bin;
@@ -41,10 +44,20 @@ if (!defined $cancer_type || !defined $array_type)
     $parsing->usage("0");
 }
 
+#require workable gdc key for downloading controled data;
 if (!defined $key)
 {
-    print STDERR "GDC key fullpath was not entered!\n";
-    $parsing->usage("0");
+    print STDERR "\nGDC key fullpath was not entered!\n\n";
+    #$parsing->usage("0");
+    exit;
+}else{
+   if (-f "$key"){
+    $key=abs_path($key);
+   }else{
+    print STDERR "The provided gdc key path doesn't exist:\n$key\n" and 
+    exit; 
+  }
+
 }
 
 my $Driver_ASE_Dir = realpath("../../");

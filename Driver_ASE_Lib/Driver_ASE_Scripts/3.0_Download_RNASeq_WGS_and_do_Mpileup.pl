@@ -1,4 +1,6 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
+
+####!/usr/bin/perl -w
 
 use strict;
 use FindBin qw($Bin);
@@ -9,11 +11,12 @@ use File::Copy;
 use Getopt::Long;
 use autodie;
 use Cwd 'realpath';
+use Cwd 'abs_path';
 use File::Basename;
 no warnings 'once';
 
 my $time = localtime;
-print "Script started: $time.\n";
+print "\nScript started: $time.\n\n";
 
 #Changes to the directory of the script executing;
 chdir $Bin;
@@ -83,11 +86,19 @@ my $reference_file = "$cancer_type\_reference.txt";
 my $GRCh37_file = "GRCh37-lite.fa";
 my $hg19_file = "hg19.fa";
 
-#If the path to the gdc key was not specified then an error will be printed and the usage of the program will be shown.
+#require real gdc key to download controled data;
+$key=abs_path($key);
 if (!defined $key)
 {
-    print STDERR "GDC key fullpath was not entered or the fullpath to it was not correct!\n";
-    $parsing->usage("3.0");
+    print STDERR "\nGDC key fullpath was not entered for cancer type $cancer_type!\n";
+    $parsing->usage("3.0_table");
+}else{
+    if (-f $key){
+       $key=abs_path($key);
+       }else{
+       print STDERR "\nGDC key fullpath doesn't exist:\n$key\n";
+       exit;
+       }
 }
 
 $parsing->check_directory_existence("$database_path","$key"); #check if directories or files exist
@@ -216,7 +227,8 @@ my $rna_wgs_dir = dirname($OUT_DIR);
 chdir "$rna_wgs_dir";
 
 #Gets the full path to the directory if the path was not set to the default directory.
-unless ($OUT_DIR eq "$Analysispath/$cancer_type/$rna_dwnlds/bams" or $OUT_DIR eq "$Analysispath/$cancer_type/$wgs_dwnlds/bams")
+unless ($OUT_DIR eq "$Analysispath/$cancer_type/$rna_dwnlds/bams" or 
+$OUT_DIR eq "$Analysispath/$cancer_type/$wgs_dwnlds/bams")
 {
     $rna_wgs_dir = realpath("../$rna_wgs_dir");
     $OUT_DIR = realpath("../$OUT_DIR");
@@ -227,7 +239,8 @@ unless ($OUT_DIR eq "$Analysispath/$cancer_type/$rna_dwnlds/bams" or $OUT_DIR eq
 $parsing->copyfile2newfullpath("$key","$rna_wgs_dir/gdc.key");
 
 #Checks if a table file does not exist in the tables directory of the cancer type.
-if (($Exp_Strategy eq "RNA-Seq" and !(-f "$Analysispath/$cancer_type/$tables/$RNA_table")) or ($Exp_Strategy eq "WGS" and !(-f "$Analysispath/$cancer_type/$tables/$WGS_table")))
+if (($Exp_Strategy eq "RNA-Seq" and !(-f "$Analysispath/$cancer_type/$tables/$RNA_table")) or 
+($Exp_Strategy eq "WGS" and !(-f "$Analysispath/$cancer_type/$tables/$WGS_table")))
 {   
     #parses the gdc website manifest of the specified cancer type and prints to a results file.
     #gdc_parser($cancer_type(e.g. OV),$Exp_Strategy (RNA-Seq or WGS))
@@ -322,7 +335,8 @@ if (($Exp_Strategy eq "RNA-Seq" and !(-f "$Analysispath/$cancer_type/$tables/$RN
         #No header in the output, thus no need to strip head!
         #pull_matched_tn_GDC($downloadtable_sorted.txt file,output file)
         $dwnld->pull_matched_tn_GDC("$downloadtable\_sorted.txt","$downloadtable\_$Exp_Strategy.txt");
-	$parsing->vlookup("$downloadtable\_$Exp_Strategy.txt",1,"$cancer_type.result.txt",1,4,"y","$downloadtable\_$Exp_Strategy\_size.txt");
+	$parsing->vlookup("$downloadtable\_$Exp_Strategy.txt",1,"$cancer_type.result.txt",1,4,"y",
+        "$downloadtable\_$Exp_Strategy\_size.txt");
         open (SIZE,"$downloadtable\_$Exp_Strategy\_size.txt");
         open (SO,">$downloadtable\_$Exp_Strategy\_convert.txt");
         #convert the size of the WGS bams to gigabytes.
@@ -353,23 +367,29 @@ if (($Exp_Strategy eq "RNA-Seq" and !(-f "$Analysispath/$cancer_type/$tables/$RN
     }
 }
 else
-{
+{#when all WGS and RNAseq tables are available;
     if ($Exp_Strategy eq "WGS")
     {
-        print "It seems that there is a table in the directory $Analysispath/$cancer_type/$tables. $WGS_table\n";
+        print "It seems that there is a table in the directory $Analysispath/$cancer_type/$tables/$WGS_table\n";
     }
     else
     {
-        print "It seems that there is a table in the directory $Analysispath/$cancer_type/$tables. $RNA_table\n";
+        print "It seems that there is a table in the directory $Analysispath/$cancer_type/$tables/$RNA_table\n";
     }
 }
 
 if (lc $overlap eq "y" || lc $overlap eq "yes")
 {
-    $parsing->check_directory_existence("$Analysispath/$cancer_type/$tables/$RNA_table","$Analysispath/$cancer_type/$tables/$WGS_table","$Analysispath/$cancer_type/$tables/$Genotypes_table"); #checks if RNA-Seq, WGS and Genotypes tables exist before overlapping them
-    if (!(-s "$Analysispath/$cancer_type/$tables/$RNA_table" == 0) and !(-s "$Analysispath/$cancer_type/$tables/$WGS_table" == 0) and !(-s "$Analysispath/$cancer_type/$tables/$Genotypes_table" == 0))
+    $parsing->check_directory_existence("$Analysispath/$cancer_type/$tables/$RNA_table",
+    "$Analysispath/$cancer_type/$tables/$WGS_table","$Analysispath/$cancer_type/$tables/$Genotypes_table"); 
+    #checks if RNA-Seq, WGS and Genotypes tables exist before overlapping them
+    if (!(-s "$Analysispath/$cancer_type/$tables/$RNA_table" == 0) and 
+        !(-s "$Analysispath/$cancer_type/$tables/$WGS_table" == 0) and 
+        !(-s "$Analysispath/$cancer_type/$tables/$Genotypes_table" == 0))
     {
-        $parsing->Overlap_RNA_WGS_Geno("$Analysispath/$cancer_type/$tables","$RNA_table","$WGS_table","$Genotypes_table","$RNA_table_overlap","$WGS_table_overlap","$Genotypes_table_overlap","$Intersect","$Exp_Strategy","$cancer_type");
+        $parsing->Overlap_RNA_WGS_Geno("$Analysispath/$cancer_type/$tables","$RNA_table","$WGS_table",
+        "$Genotypes_table","$RNA_table_overlap","$WGS_table_overlap","$Genotypes_table_overlap",
+        "$Intersect","$Exp_Strategy","$cancer_type");
     }
     else
     {
@@ -384,11 +404,17 @@ if (lc $overlap eq "y" || lc $overlap eq "yes")
         mkdir "$rna_wgs_dir/$wgs_mpileups" unless (-d "$rna_wgs_dir/$wgs_mpileups");
         if (lc $overlap eq "y" or lc $overlap eq "yes")
         {
-            $dwnld->Dwld_WGSBam_and_do_mpileup("$Analysispath/$cancer_type/$tables/$WGS_table_overlap","$rna_wgs_dir","$OUT_DIR","$database_path/$GRCh37_file","$rna_wgs_dir/$wgs_mpileups",$option,$number,$VarScan_Path,$cancer_type,"$database_path/$hg19_file","$Analysispath/$cancer_type/$tables",$dwnld_cmd,"$samtools");
+            $dwnld->Dwld_WGSBam_and_do_mpileup("$Analysispath/$cancer_type/$tables/$WGS_table_overlap",
+            "$rna_wgs_dir","$OUT_DIR","$database_path/$GRCh37_file","$rna_wgs_dir/$wgs_mpileups",
+            $option,$number,$VarScan_Path,$cancer_type,"$database_path/$hg19_file",
+            "$Analysispath/$cancer_type/$tables",$dwnld_cmd,"$samtools");
         }
         else
         {
-            $dwnld->Dwld_WGSBam_and_do_mpileup("$Analysispath/$cancer_type/$tables/$WGS_table","$rna_wgs_dir","$OUT_DIR","$database_path/$GRCh37_file","$rna_wgs_dir/$wgs_mpileups",$option,$number,$VarScan_Path,$cancer_type,"$database_path/$hg19_file","$Analysispath/$cancer_type/$tables",$dwnld_cmd,"$samtools");
+            $dwnld->Dwld_WGSBam_and_do_mpileup("$Analysispath/$cancer_type/$tables/$WGS_table",
+            "$rna_wgs_dir","$OUT_DIR","$database_path/$GRCh37_file","$rna_wgs_dir/$wgs_mpileups",
+            $option,$number,$VarScan_Path,$cancer_type,"$database_path/$hg19_file",
+            "$Analysispath/$cancer_type/$tables",$dwnld_cmd,"$samtools");
         }
         copy("already_done_WGS.txt","$Analysispath/$cancer_type/$tables");
     }
@@ -398,12 +424,24 @@ if (lc $overlap eq "y" || lc $overlap eq "yes")
 	{
 	    `mkdir -p $ase/$rna_mpileups` unless (-d "$ase/$rna_mpileups");
 	}
-	#Dwld_RNASeq_Bam_and_do_mpileup($Analysispath/$cancer_type/$tables/$downloadtable\_$Exp_Strategy.txt,$rna_wgs_dir (path to gdc key),$OUT_DIR (path to output directory),$database_path/$GRCh37_file (path to GRCh37-lite fa file),$ase/$rna_mpileups (path to the directory where rna mpileups will be stored),$cds_sorted (path to directory where cds sorted files are stored),$option (all,download or mpileups),$option (all,download or mpileups),$number(number of base to split into files),$dwnld_cmd (curl or aria2c),$samtools (path/command for samtools))
+	#Dwld_RNASeq_Bam_and_do_mpileup($Analysispath/$cancer_type/$tables/$downloadtable\_$Exp_Strategy.txt,
+        #$rna_wgs_dir (path to gdc key),$OUT_DIR (path to output directory),
+        #$database_path/$GRCh37_file (path to GRCh37-lite fa file),
+        #$ase/$rna_mpileups (path to the directory where rna mpileups will be stored),
+        #$cds_sorted (path to directory where cds sorted files are stored),$option (all,download or mpileups),
+        #$option (all,download or mpileups),$number(number of base to split into files),
+        #$dwnld_cmd (curl or aria2c),$samtools (path/command for samtools))
         if (lc $overlap eq "y" or lc $overlap eq "yes")
         {
-            $dwnld->Dwld_RNASeq_Bam_and_do_mpileup("$Analysispath/$cancer_type/$tables/$RNA_table_overlap","$rna_wgs_dir","$OUT_DIR","$database_path/$GRCh37_file","$ase/$rna_mpileups","$RNA_Path/$cds_sorted",$option,$number,$dwnld_cmd,"$samtools"); 
-        }
-            $dwnld->Dwld_RNASeq_Bam_and_do_mpileup("$Analysispath/$cancer_type/$tables/$RNA_table","$rna_wgs_dir","$OUT_DIR","$database_path/$GRCh37_file","$ase/$rna_mpileups","$RNA_Path/$cds_sorted",$option,$number,$dwnld_cmd,"$samtools"); 
+            $dwnld->Dwld_RNASeq_Bam_and_do_mpileup("$Analysispath/$cancer_type/$tables/$RNA_table_overlap",
+            "$rna_wgs_dir","$OUT_DIR","$database_path/$GRCh37_file","$ase/$rna_mpileups",
+            "$RNA_Path/$cds_sorted",$option,$number,$dwnld_cmd,"$samtools"); 
+        }else{
+
+            $dwnld->Dwld_RNASeq_Bam_and_do_mpileup("$Analysispath/$cancer_type/$tables/$RNA_table",
+            "$rna_wgs_dir","$OUT_DIR","$database_path/$GRCh37_file","$ase/$rna_mpileups","$RNA_Path/$cds_sorted",
+            $option,$number,$dwnld_cmd,"$samtools"); 
+         }
     }
 
 chdir "$rna_wgs_dir";

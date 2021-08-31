@@ -1,4 +1,6 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
+
+####!/usr/bin/perl -w
 
 use MCE::Map;
 use FindBin qw($Bin);
@@ -12,7 +14,7 @@ use strict;
 use autodie;
 
 my $time = localtime;
-print "Script started: $time.\n";
+print "\nScript started: $time.\n\n";
 
 #Changes to the directory of the script executing;
 chdir $Bin;
@@ -66,21 +68,27 @@ $parsing->check_cancer_type($database_path,$cancer_type); #checks if the cancer 
 chdir "$RNA_Path";
 
 `mkdir -p $imputation` unless(-d "$imputation");
-`find $imputation/* 2>/dev/null |xargs rm -rf`;
+#`find $imputation/* 2>/dev/null |xargs rm -rf`;
 `mkdir -p $logs` unless(-d "$logs");
 
 #submit_shapeit($OneKG_Ref_Path (path to ALL.integrated_phase1_SHAPEIT_16-06-14.nomono),$RNA_Path (path to directory where RNA-Seq analysis data is stored),$imputation (path to directory with default name phased),$map_dir (path to directory where map files are stored),$ped_dir(path to directory where ped files are stored),l$logs (path to directory where log files will be stored),$shapeit (path/command for shapeit))
 my @shapeit_cmds = $impute_plink->submit_shapeit("$OneKG_Ref_Path","$RNA_Path","$imputation","$map_dir","$ped_dir","$logs","$shapeit");
 
-mce_map
-{
-    system("$shapeit_cmds[$_]");
+#mce_map
+#Just run one by one;
+map{
+  print STDERR "Running phasing for $shapeit_cmds[$_]......\n";  
+  #debugging;
+  system("$shapeit_cmds[$_]");
 } 0..$#shapeit_cmds;
+
 
 #fetch_Chrom_Sizes(reference genome(e.g. hg19))
 $impute_plink->fetch_Chrom_Sizes("hg19");
 
-`cat chr_lens_grep_chr | grep -v Un | grep -v random | grep -v hap | grep -v M | grep -v Y | grep chr > chr_lens`;
+#Pay attention to the excluding of fix and alt contigs;
+#This will make sure the total number of chrs would be 23;
+`cat chr_lens_grep_chr | grep -v Un | grep -v random | grep -v hap | grep -v M | grep -v Y | grep fix -v |grep alt -v |grep chr > chr_lens`;
 
 `cat chr_lens|head -n 11 > file_for_submit`;
 
@@ -89,8 +97,10 @@ mkdir "$Impute2out" unless(-d "$Impute2out");
 #submit_all(file with chr sizes,$OneKG_Ref_Path (path to ALL.integrated_phase1_SHAPEIT_16-06-14.nomono),$imputation (path to directory with default name phased),$Impute2out (path to directory where raw imputed files will be stored))
 my @imput2cmds = $impute_plink->submit_all("file_for_submit", $OneKG_Ref_Path, $imputation, $Impute2out,"$impute");
 
-mce_map
-{
+#mce_map
+#just run one by one
+map
+{  print STDERR "running $imput2cmds[$_]\n";
    system("$imput2cmds[$_]");
 } 0..$#imput2cmds;
 
@@ -107,8 +117,10 @@ system("find $Impute2out -type f -name \"*_allele_probs\" -o -name \"*_info_by_s
 #submit next 12 chrs for imputation
 undef @imput2cmds;
 @imput2cmds = $impute_plink->submit_all( "file_for_submit", $OneKG_Ref_Path, $imputation, $Impute2out,"$impute");
-mce_map
-{
+#mce_map
+#just run one by one;
+map
+{   print STDERR "running $imput2cmds[$_]\n";
     system("$imput2cmds[$_]");
 } 0..$#imput2cmds;
 

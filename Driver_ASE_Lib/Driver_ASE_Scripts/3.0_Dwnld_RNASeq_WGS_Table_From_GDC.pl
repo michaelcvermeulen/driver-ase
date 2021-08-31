@@ -1,6 +1,12 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 
+
+#####!/usr/bin/perl -w
+
+
+use warnings;
 use strict;
+use Cwd 'abs_path';
 use FindBin qw($Bin);
 use lib "$Bin/..";
 use Parsing_Routines;
@@ -13,7 +19,7 @@ no warnings 'once';
 use autodie;
 
 my $time = localtime;
-print "Script started on $time.\n";
+print "\nScript started: $time.\n\n";
 
 #Changes to the directory of the script executing;
 chdir $Bin;
@@ -63,11 +69,19 @@ my $WGS_table_overlap = "$downloadtable\_WGS_overlap.txt";
 my $Genotypes_table_overlap = "$cancer_type.Genotypes.id2uuid_overlap.txt";
 my $reference_file = "$cancer_type\_$Exp_Strategy\_reference.txt";
 
-#If the path to the gdc key was not specified then an error will be printed and the usage of the program will be shown.
+#If the path to the gdc key was not specified then a toy key will be used for query sample information only;
 if (!defined $key)
 {
-    print STDERR "GDC key fullpath was not entered or the fullpath to it was not correct!\n";
-    $parsing->usage("3.0_table");
+    print STDERR "\nGDC key fullpath was not entered for the cancer type $cancer_type!\n";
+    #$parsing->usage("3.0_table");
+    $key=abs_path("../../Database/gdc.key");
+    print STDERR "Try to use default toy key $key to run the script!\n\n";
+}else{
+   if (-f "$key"){
+    $key=abs_path($key);
+    }else{
+    print STDERR "The GDC key doesn't exist:\n$key\n" and exit;
+    }
 }
 
 $parsing->check_directory_existence("$database_path","$key"); #check if directories or files exist
@@ -163,7 +177,14 @@ foreach my $cancer_type (@cancer)
         #parses the gdc website manifest of the specified cancer type and prints to a results file.
         #gdc_parser($cancer_type(e.g. OV),$Exp_Strategy (RNA-Seq or WGS))
         $dwnld->gdc_parser($cancer_type,$Exp_Strategy);
-      
+        #check whether there are records in the output file $cancer_type.result.txt;
+        chomp(my $records=`wc -l $cancer_type.result.txt`);
+        if ($records=~/^(\d+)\D/){
+           if ($1 < 2){
+           print STDERR "\nIt seems that no query results for the data type $Exp_Strategy of cancer type $cancer_type in GDC\n";
+           exit;
+          }
+        }     
         #Gets the metadata data of the file and places the UUID in a Payload.txt file.
         #metadata_collect(.result.txt file from gdc_parser,output file)
         $dwnld->metadata_collect("$cancer_type.result.txt","Payload.txt");
@@ -273,26 +294,32 @@ foreach my $cancer_type (@cancer)
             copy("$RNA_table","$Analysispath/$cancer_type/$tables");
         }
     }
-    else
-    {
+  else
+    {#When all tables were available!
         if ($Exp_Strategy eq "WGS")
         {
-            print "It seems that there is a table in the directory $Analysispath/$cancer_type/$tables. $WGS_table\n";
+            print STDERR "It seems that there is a table in the directory $Analysispath/$cancer_type/$tables/$WGS_table\n";
         }
         else
         {
-            print "It seems that there is a table in the directory $Analysispath/$cancer_type/$tables. $RNA_table\n";
+            print STDERR "It seems that there is a table in the directory $Analysispath/$cancer_type/$tables/$RNA_table\n";
         }
     }
 }
 
 if (lc $overlap eq "y" || lc $overlap eq "yes")
 {
-    $parsing->check_directory_existence("$Analysispath/$cancer_type/$tables/$RNA_table","$Analysispath/$cancer_type/$tables/$WGS_table","$Analysispath/$cancer_type/$tables/$Genotypes_table"); #checks if RNA-Seq, WGS and Genotypes tables exist before overlapping them
+    $parsing->check_directory_existence("$Analysispath/$cancer_type/$tables/$RNA_table","$Analysispath/$cancer_type/$tables/$WGS_table","$Analysispath/$cancer_type/$tables/$Genotypes_table"); 
+#checks if RNA-Seq, WGS and Genotypes tables exist before overlapping them
+
     if (!(-s "$Analysispath/$cancer_type/$tables/$RNA_table" == 0) and !(-s "$Analysispath/$cancer_type/$tables/$WGS_table" == 0) and !(-s "$Analysispath/$cancer_type/$tables/$Genotypes_table" == 0))
     {
-        #Overlap_RNA_WGS_Geno($Analysispath/$cancer_type/$tables (path to cancer type table directory),$RNA_table (RNA-Seq table file),$WGS_table (WGS_table file),$Genotypes_table (Genotypes table file),$Intersect (file to output overlapped results),$Exp_Strategy (RNA-Seq or WGS),$cancer_type (e.g. OV))
-        $parsing->Overlap_RNA_WGS_Geno("$Analysispath/$cancer_type/$tables","$RNA_table","$WGS_table","$Genotypes_table","$RNA_table_overlap","$WGS_table_overlap","$Genotypes_table_overlap","$Intersect","$Exp_Strategy","$cancer_type");
+        #Overlap_RNA_WGS_Geno($Analysispath/$cancer_type/$tables (path to cancer type table directory),
+        #$RNA_table (RNA-Seq table file),$WGS_table (WGS_table file),$Genotypes_table (Genotypes table file),
+        #$Intersect (file to output overlapped results),$Exp_Strategy (RNA-Seq or WGS),$cancer_type (e.g. OV))
+        $parsing->Overlap_RNA_WGS_Geno("$Analysispath/$cancer_type/$tables","$RNA_table","$WGS_table",
+        "$Genotypes_table","$RNA_table_overlap","$WGS_table_overlap","$Genotypes_table_overlap","$Intersect",
+        "$Exp_Strategy","$cancer_type");
     }
     else
     {

@@ -1,4 +1,6 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
+
+####!/usr/bin/perl -w
 
 use MCE::Map;
 use FindBin qw($Bin);
@@ -12,7 +14,7 @@ use autodie;
 no warnings 'once';
 
 my $time = localtime;
-print "Script started: $time.\n";
+print "\nScript started: $time.\n\n";
 
 #Changes to the directory of the script executing;
 chdir $Bin;
@@ -175,7 +177,8 @@ print "Making ped files.\n";
 my @chrs=(1..23);
 my @plink_cmds;
 while (my $chr=<@chrs>)
-{
+{   #keep all snps and filter them later using different filters;
+    #push @plink_cmds,"$plink --bfile $cancer_type\_TN_TCGA_All --maf 0.01 --chr $chr --recode --out $RNA_Path/$ped_dir/$chr";
     push @plink_cmds,"$plink --bfile $cancer_type\_TN_TCGA_All --chr $chr --recode --out $RNA_Path/$ped_dir/$chr";
 }
 

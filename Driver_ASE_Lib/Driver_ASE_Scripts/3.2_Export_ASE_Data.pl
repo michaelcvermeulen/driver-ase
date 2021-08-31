@@ -1,4 +1,7 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
+
+
+####!/usr/bin/perl -w
 
 use FindBin qw($Bin);
 use lib "$Bin/..";
@@ -13,7 +16,7 @@ use autodie;
 no warnings 'once';
 
 my $time = localtime;
-print "Script started on $time.\n";
+print "\nScript started: $time.\n\n";
 
 #Changes to the directory of the script executing;
 chdir $Bin;

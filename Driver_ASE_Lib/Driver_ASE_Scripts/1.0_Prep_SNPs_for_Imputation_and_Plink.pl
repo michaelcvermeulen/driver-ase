@@ -1,4 +1,6 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
+
+#####!/usr/bin/perl -w
 
 use FindBin qw($Bin);
 use lib "$Bin/..";
@@ -10,7 +12,7 @@ use strict;
 use autodie;
 
 my $time = localtime;
-print "Script started: $time.\n";
+print "\nScript started: $time.\n\n";
 
 #Changes to the directory of the script executing;
 chdir $Bin;
@@ -56,7 +58,7 @@ $affy_dir =~ s/\/$//;
 if ((-e "$RNA_Path/$affy_dir/$snp6_anno_file" and -s "$RNA_Path/$affy_dir/$snp6_anno_file" !=0 ) and (-e "$RNA_Path/$affy_dir/$snp6_cd_file" and -s "$RNA_Path/$affy_dir/$snp6_cd_file" != 0)) 
 {
     print "The necessary files ($snp6_anno_file and $snp6_cd_file) have already been processed and reside in $RNA_Path/$affy_dir/\n";
-    print "proceed to script 1.1_Birdseed_to_ped_and_maps.pl\n";
+    print "Please proceed to script 1.1_Birdseed_to_ped_and_maps.pl\n";
 }
 else
 {
@@ -75,7 +77,7 @@ else
     print "Now running PrepareAffxAlleleAccording2ImputationAlleles.\n";
     #PrepareAffxAlleleAccording2ImputationAlleles($RNA_Path/$affy_dir/$GenomeWideSNP (path to GenomeWideSNP_6.na35.annot.csv file),$database_path (path to the Database directory), $snp6_anno_file (snp6.anno.txt file),$snp6_cd_file (snp6.cd.txt file))
     $impute_plink->PrepareAffxAlleleAccording2ImputationAlleles("$RNA_Path/$affy_dir","$database_path","$snp6_anno_file","$snp6_cd_file");
-    
+    unlink("$RNA_Path/$affy_dir/*csv");
     print "All jobs have finished for $cancer_type.\n";
     
     $time = localtime;
