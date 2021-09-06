@@ -43,6 +43,8 @@ if [ -x "$(command -v conda)" ]; then
       exit 0;
      else
       echo "The conda driverase environment exists, and we will force to install Driver-ASE and its dependencies and databases!";
+      #conda deactivate; 
+      #conda activate driverase; exit 0;
      fi
       
     else
@@ -102,103 +104,111 @@ conda config --add channels conda-forge
 echo ""
 
 #conda activate driverase
-if [ "$(conda list|grep ^make|perl -ane 'print 1 if length($_)>0')" -ne 1 ]; then
+if [ "$(conda list|perl -0 -ane '(/^make/m)? (print 1):(print 0)')" -ne 1 ]; then
 conda install make --yes
 else
 echo "No need to install make in conda, as it is there!";
 echo "";
 fi
-
-if [ "$(conda list|grep ^curl|perl -ane 'print 1 if length($_)>0')" -ne 1 ]; then
+if [ "$(conda list|perl -0 -ane '(/^curl/m)? (print 1):(print 0)')" -ne 1 ]; then
 conda install curl --yes
 else
 echo "No need to install curl in conda, as it is there!";
 echo "";
 fi
 
-if [ "$(conda list|grep ^c-compiler|perl -ane 'print 1 if length($_)>0')" -ne 1 ]; then
+if [ "$(conda list|perl -0 -ane '(/^c-compiler/m)? (print 1):(print 0)')" -ne 1 ]; then
 conda install -c conda-forge c-compiler  --yes
 else
 echo "No need to install c-compiler in conda, as it is there!";
 echo "";
 fi
 
-if [ "$(conda list|grep ^perl-file-which|perl -ane 'print 1 if length($_)>0')" -ne 1 ]; then
+if [ "$(conda list|perl -0 -ane '(/^perl-file-which/m)? (print 1):(print 0)')" -ne 1 ]; then
 conda install -c bioconda perl-file-which --yes
 else
 echo "No need to install perl-file-which in conda, as it is there!";
 echo "";
 fi
 
-if [ "$(conda list|grep ^git|perl -ane 'print 1 if length($_)>0')" -ne 1 ]; then
+if [ "$(conda list|perl -0 -ane '(/^git/m)? (print 1):(print 0)')" -ne 1 ]; then
 conda install git --yes
 else
 echo "No need to install git in conda, as it is there!";
 echo "";
 fi
 
-if [ "$(conda list|grep ^impute2|perl -ane 'print 1 if length($_)>0')" -ne 1 ]; then
+if [ "$(conda list|perl -0 -ane '(/^impute2/m)? (print 1):(print 0)')" -ne 1 ]; then
 conda install impute2 --yes
 else
 echo "No need to install impute2 in conda, as it is there!";
 echo "";
 fi
 
-if [ "$(conda list|grep ^shapeit|perl -ane 'print 1 if length($_)>0')" -ne 1 ]; then
+if [ "$(conda list|perl -0 -ane '(/^shapeit/m)? (print 1):(print 0)')" -ne 1 ]; then
 conda install -c dranew shapeit --yes
 else
 echo "No need to install shapeit in conda, as it is there!";
 echo "";
 fi
 
-if [ "$(conda list|grep ^plink|perl -ane 'print 1 if length($_)>0')" -ne 1 ]; then
+if [ "$(conda list|perl -0 -ane '(/^plink/m)? (print 1):(print 0)')" -ne 1 ]; then
 conda install -c bioconda plink --yes
 else
 echo "No need to install plink in conda, as it is there!";
 echo "";
 fi
 
-if [ "$(conda list|grep ^varscan|perl -ane 'print 1 if length($_)>0')" -ne 1 ]; then
+if [ "$(conda list|perl -0 -ane '(/^varscan/m)? (print 1):(print 0)')" -ne 1 ]; then
 conda install -c bioconda varscan --yes
 else
 echo "No need to install varscan in conda, as it is there!";
 echo "";
 fi
 
-if [ "$(conda list|grep ^bedtools|perl -ane 'print 1 if length($_)>0')" -ne 1 ]; then
+if [ "$(conda list|perl -0 -ane '(/^bedtools/m)? (print 1):(print 0)')" -ne 1 ]; then
 conda install bedtools --yes
 else
 echo "No need to install bedtools in conda, as it is there!";
 echo "";
 fi
 
-if [ "$(conda list|grep ^perl-mce|perl -ane 'print 1 if length($_)>0')" -ne 1 ]; then
+if [ "$(conda list|perl -0 -ane '(/^perl-mce/m)? (print 1):(print 0)')" -ne 1 ]; then
 conda install -c bioconda perl-mce --yes
 else
 echo "No need to install perl-mce in conda, as it is there!";
 echo "";
 fi
 
-if [ "$(conda list|grep ^perl-lwp-simple|perl -ane 'print 1 if length($_)>0')" -ne 1 ]; then
+if [ "$(conda list|perl -0 -ane '(/^perl-lwp-simple/m)? (print 1):(print 0)')" -ne 1 ]; then
 conda install -c bioconda perl-lwp-simple  --yes
 else
 echo "No need to install perl-lwp-simple in conda, as it is there!";
 echo "";
 fi
 
-if [ "$(conda list|grep ^perl-math-cdf|perl -ane 'print 1 if length($_)>0')" -ne 1 ]; then
+if [ "$(conda list|perl -0 -ane '(/^perl-math-cdf/m)? (print 1):(print 0)')" -ne 1 ]; then
 conda install -c bioconda perl-math-cdf --yes
 else
 echo "No need to install perl-match-cdf in conda, as it is there!";
 echo "";
 fi
 
-if [ "$(conda list|grep ^samtools|perl -ane 'print 1 if length($_)>0')" -ne 1 ]; then
+if [ "$(conda list|perl -0 -ane '(/^samtools/m)? (print 1):(print 0)')" -ne 1 ]; then
 conda install -c bioconda samtools --yes
 else
 echo "No need to install samtools in conda, as it is there!";
 echo "";
 fi
+
+if [ "$(conda list|perl -0 -ane '(/^ucsc-overlapselect/m)? (print 1):(print 0)')" -ne 1 ]; then
+conda install -c bioconda ucsc-overlapselect --yes
+else
+echo "No need to install ucsc-overlapselect in conda, as it is there!";
+echo "";
+fi
+
+
 
 #install matlab run time in linux silently
 
@@ -212,7 +222,7 @@ if [ ! -d "v90" ]; then
 #for linux
 wget --no-check-certificate https://ssd.mathworks.com/supportfiles/downloads/R2015b/deployment_files/R2015b/installers/glnxa64/MCR_R2015b_glnxa64_installer.zip
 unzip MCR_R2015b_glnxa64_installer.zip
-rm MCR_R2015b_glnxa64_installer.zip
+rm -rf MCR_R2015b_glnxa64_installer.zip
 
 #for Mac
 #wget https://ssd.mathworks.com/supportfiles/downloads/R2015b/deployment_files/R2015b/installers/maci64/MCR_R2015b_maci64_installer.zip
@@ -221,6 +231,8 @@ rm MCR_R2015b_glnxa64_installer.zip
 
 #if install MCR in Mac, need to run the following code to allow it to be installed successfully;
 #sudo spctl --master-disable
+
+cwd=`pwd`;
 
 ./install -mode silent -agreeToLicense yes -destinationFolder `pwd`
 
@@ -236,14 +248,12 @@ echo "Going to check whether in the ~/.bashrc there is previously added MATLAB r
 chk_matlab_runtime=`perl -ane '
 $tag=0;
 $tag=1 if (/v90.runtim/i and /v90.sys.os/i and /v90.bin/i and /v90.sys.opengl/i);
-print $tag and exit if $tag==1' < ~/.bashrc
-`;
+print $tag and exit if $tag==1' < ~/.bashrc`;
 
 #update the $pwd with the right one;
 if [ "$chk_matlab_runtime" -eq 1 ]; then
  echo "No previous MATLAB runtime environmental vars in your bashrc!"
  echo "We will add LD_LIBRARY_PATH for your MATLAB runtime now....";
- cwd=`pwd`;
  echo "Putting the following into your ~/.bashrc file";
  echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:$cwd/v90/runtime/glnxa64:$cwd/v90/bin/glnxa64:$cwd/v90/sys/os/glnxa64:$cwd/v90/sys/opengl/lib/glnxa64
 XAPPLRESDIR=$cwd/v90/X11/app-defaults
@@ -263,7 +273,9 @@ else
 fi
 
 echo "Removing unnecessary data after completing the installation of MATLAB runtime v90....";
-ls |grep v90 -v|xargs rm -rf
+#ls |grep v90 -v|xargs rm -rf
+#It would be more safer to remove these files or directory specifically!
+rm -rf java bin archieves install MCR_license.txt  productdata sys;
 
 else
 
@@ -287,6 +299,14 @@ rm -rf Driver_ASE/Driver_ASE_MatLab/MatLab_Analysis.zip
 mv MatLab_Analysis Driver_ASE/Driver_ASE_MatLab/ 
 chmod a+x Driver_ASE/Driver_ASE_MatLab/Driver_ASE_MatLab_Lib/Driver_ASE_MatLab_Scripts/M1_Import_ASE_and_Mutation_data
 chmod a+x Driver_ASE/Driver_ASE_Lib/Driver_ASE_Scripts/*
+cd Driver_ASE
+mkdir Analysis
+cd Analysis
+mv ../sample_tables_for_33_cancer_types.tgz
+echo "Uncompress the predownloaded tables for 33 cancer types"
+tar -zxvf sample_tables_for_33_cancer_types.tgz 
+rm -rf sample_tables_for_33_cancer_types.tgz
+cd ../..
 echo "Completed the downloading of Driver-ASE scripts from github"
 echo ""
 else
@@ -307,7 +327,7 @@ echo "Start to download Driver-ASE required 1000 Genome Project databases for sh
 echo "Going to download partial Driver-ASE database first from https://data.mendeley.com/datasets/8x3y5swppw/5";
 wget https://md-datasets-public-files-prod.s3.eu-west-1.amazonaws.com/3987fd82-d0b9-4547-bfd1-2f3591112929 -O Database.tgz
 tar -xzvf Database.tgz
-rm Database.tgz 
+rm -rf Database.tgz 
 else
 echo "No need to download the partial Driver-ASE database from Mendeley, as it was there!";
 echo "";
@@ -320,7 +340,7 @@ Download 1000 Genome Project reference haplotype files;
 https://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3.html
 wget https://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3.tgz -O 1000GP_Phase3.tgz
 tar -xzvf 1000GP_Phase3.tgz
-rm 1000GP_Phase3.tgz
+rm -rf 1000GP_Phase3.tgz
 wget https://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3_chrX.tgz -O 1000GP_Phase3_chrX.tgz
 tar -xzvf 1000GP_Phase3_chrX.tgz
 rm -rf 1000GP_Phase3_chrX.tgz
@@ -350,7 +370,7 @@ echo "";
 echo "Download a pipeline to map user input mutations data for Driver-ASE....";
 wget https://md-datasets-public-files-prod.s3.eu-west-1.amazonaws.com/5c40a59c-bb44-4d90-b3e6-8d202143e981 -O Pipeline2MapMuts2DiffRegulatoryRegions.zip
 unzip Pipeline2MapMuts2DiffRegulatoryRegions.zip
-rm Pipeline2MapMuts2DiffRegulatoryRegions.zip
+rm -rf Pipeline2MapMuts2DiffRegulatoryRegions.zip
 else
 echo "No need to download Pipeline2MapMuts2DiffRegulatoryRegions.zip, as it was there already!"
 echo "";
