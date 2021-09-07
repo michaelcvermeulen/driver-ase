@@ -122,7 +122,8 @@ sub pileup_at_cd
 	    next;
 	}
         my $cd = $CD{$a[0]."-".$a[1]};
-            my($a_counts,$b_counts) = get_counts($cd,$a[4]);
+	    #also compare with ref from mpileup
+            my($a_counts,$b_counts) = get_counts($cd,$a[4],$a[2]);
             if (($a_counts == 0) && ($b_counts == 0))
 	    {
 		next;
@@ -141,7 +142,7 @@ sub pileup_at_cd
 ####################pileup_at_cd subs############################
 sub get_counts
 {
-    my($alts,$string) = @_;
+    my($alts,$string,$pileup_ref) = @_;
     
     $alts =~ s/\|/\,/;
     my @w = split(",",$alts);
