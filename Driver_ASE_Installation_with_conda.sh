@@ -2,8 +2,8 @@
 if [ "$#" -lt 1 ]; then
  echo ""
  echo "Usage: Driver_ASE_Installation_with_conda.sh 
-(1) Dir4InstallationFullpath (provide . if wanted to install in current directory)
-(2) force (force to install: default is 0, otherwise, provide 1)"
+(1) Dir4InstallationFullpath (enter \".\" to install in current directory)
+(2) Force (force installation: default is \"0\", enter \"1\" to force installation)"
  echo "";
  exit 0;
 fi
