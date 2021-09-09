@@ -3,7 +3,8 @@ if [ "$#" -lt 1 ]; then
  echo ""
  echo "Usage: Driver_ASE_Installation_with_conda.sh 
 (1) Dir4InstallationFullpath (enter \".\" to install in current directory)
-(2) Force (force installation: default is \"0\", enter \"1\" to force installation)"
+(2) Force (force installation: default is \"0\", enter \"1\" to force installation)
+Note: wget needs to be installed for running this shell script to download data!"
  echo "";
  exit 0;
 fi
