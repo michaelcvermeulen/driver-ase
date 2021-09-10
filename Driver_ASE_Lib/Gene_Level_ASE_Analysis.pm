@@ -123,7 +123,11 @@ sub pileup_at_cd
 	}
         my $cd = $CD{$a[0]."-".$a[1]};
 	    #also compare with ref from mpileup
-            my($a_counts,$b_counts) = get_counts($cd,$a[4],$a[2]);
+	    #the ref allele $a[2] is not necessary here when running mpileup without using 
+	    #of reference, as only the mpileupe output will have alleles but not {'.',','}
+	    #in the mpileup output;
+            #my($a_counts,$b_counts) = get_counts($cd,$a[4],$a[2]);
+	    my($a_counts,$b_counts) = get_counts($cd,$a[4];
             if (($a_counts == 0) && ($b_counts == 0))
 	    {
 		next;
@@ -141,8 +145,11 @@ sub pileup_at_cd
 
 ####################pileup_at_cd subs############################
 sub get_counts
-{
-    my($alts,$string,$pileup_ref) = @_;
+{   #No need to have ref allele as input,
+    #as samtool mpileup output will not have {'.', ','} and 
+    #all aligned bases were included in the mpileupe output;
+    #my($alts,$string,$pileup_ref) = @_;
+    my($alts,$string) = @_;
     
     $alts =~ s/\|/\,/;
     my @w = split(",",$alts);
@@ -159,11 +166,11 @@ sub get_counts
         for (my $i = 0;$i < scalar(@ST);$i++)
         {
 	    if ($ST[$i] eq $w[0])
-	    {
+	    {#this only works for samtools mpileup output generated without of ref supplied
 	        $aa++;
 	    }
 	    elsif ($ST[$i] eq $w[1])
-	    {
+	    {#this only works for samtools mpileup output generated without of ref supplied
 	        $bb++;
 	    }
 	}
