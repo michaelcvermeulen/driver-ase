@@ -303,7 +303,7 @@ chmod a+x Driver_ASE/Driver_ASE_Lib/Driver_ASE_Scripts/*
 cd Driver_ASE
 mkdir Analysis
 cd Analysis
-mv ../sample_tables_for_33_cancer_types.tgz
+mv ../sample_tables_for_33_cancer_types.tgz .
 echo "Uncompress the predownloaded tables for 33 cancer types"
 tar -zxvf sample_tables_for_33_cancer_types.tgz 
 rm -rf sample_tables_for_33_cancer_types.tgz
